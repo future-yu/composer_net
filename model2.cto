@@ -1,0 +1,434 @@
+/*
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+namespace org.control.reserve.platform
+
+
+//TSO表示德国电网运营商，DNO表示德国配电系统运营商
+
+enum BidderType {  //参与竞标者的类型
+    o AGGREGATOR   //组合体类型
+    o POWER_PLANT  //单个参与者类型
+}
+
+enum TenderStatus {
+    o CREATED
+    o IN_PROGRESS
+    o FINISHED
+}
+
+enum TestResult {
+  o PASS
+  o FAIL
+}
+
+enum EnergyPricePaymentDirection {     //在结算EnergyPrice的时候，竞标者和德国电网运营商之间的给钱关系
+    o GRID_TO_TECHNICAL_UNIT           //招标的是正电量的时候，是德国电网运营商给竞标者钱
+    o TECHNICAL_UNIT_TO_GRID           //招标的是负电量的时候，是竞标者给德国电网运营商钱
+}
+
+enum ProductType {        //招标电量的类型
+    o POSITIVE
+    o NEGATIVE
+}
+
+enum ProductTimeSlice {    //招标的时间段，每天6个阶段
+    o from00To04
+    o from04To08
+    o from08To12
+    o from12To16
+    o from16To20
+    o from20To24
+}
+
+
+participant TransmissionSystemOperator identified by transmissionSystemOperatorId  {   //德国电网运营商
+    o String transmissionSystemOperatorId
+    o String name
+}
+
+participant DistributionNetworkOperator identified by distributionNetworkOperatorId {   //德国配电系统运营商
+  o String distributionNetworkOperatorId
+  o String name
+}
+
+participant Bidder identified by bidderId  {   //竞标者
+    o String bidderId
+    o String name
+
+    o BidderType type          //竞标者类型
+    --> TechnicalUnit[] technicalUnits optional    //技术单位（TechnicalUnit）是属于Aggregator的，即他的成员
+    --> Offer[] offers optional      //竞标者提供的竞拍信息
+}
+
+participant TechnicalUnit identified by technicalUnitId  {  //技术单位（TechnicalUnit）
+    o String technicalUnitId
+    o String name
+
+    o Double offeredCapacity   //技术单位的属性，竞拍的电量
+    o Double capacityPrice     //技术单位的属性，保留电量的价格
+    o Double energyPrice       //技术单位的属性，调用电量的价格
+    --> Offer[] offers optional
+}
+
+
+concept Amount6 {             //主要用于竞标环节时间段设置
+    o Double from00To04
+    o Double from04To08
+    o Double from08To12
+    o Double from12To16
+    o Double from16To20
+    o Double from20To24
+}
+
+concept Amount16 {           //主要用于公布调用阶段和结算阶段的时间段设置
+    o Double from000To015
+    o Double from015To030
+    o Double from030To045
+    o Double from045To060
+
+    o Double from060To075
+    o Double from075To090
+    o Double from090To105
+    o Double from105To120
+
+    o Double from120To135
+    o Double from135To150
+    o Double from150To165
+    o Double from165To180
+
+    o Double from180To195
+    o Double from195To210
+    o Double from210To225
+    o Double from225To240
+}
+
+concept Amount16Arr{
+    o Double[] from000To015
+    o Double[] from015To030
+    o Double[] from030To045
+    o Double[] from045To060
+
+    o Double[] from060To075
+    o Double[] from075To090
+    o Double[] from090To105
+    o Double[] from105To120
+
+    o Double[] from120To135
+    o Double[] from135To150
+    o Double[] from150To165
+    o Double[] from165To180
+
+    o Double[] from180To195
+    o Double[] from195To210
+    o Double[] from210To225
+    o Double[] from225To240
+}
+
+asset Demand identified by demandId {          //德国电网运营商公布的招标信息
+    o String demandId
+    o String reserveType                       //所招电量的种类
+    o String tenderType                        //招标的类型，每日
+    o DateTime tenderDeadline                  //招标的截止日期
+    o DateTime deliveryPeriod                  //招哪天的电量
+    o Amount6 negative                         //每个时间段都要找正负电量
+    o Amount6 positive
+    --> TransmissionSystemOperator transmissionSystemOperator optional      //由德国电网运营商进行
+}
+
+concept OfferedInfo {
+    o Amount6 offeredCapacity //竞拍的电量
+    o Amount6 capacityPrice   //保留电量的价格
+    o Amount6 energyPrice     //调用电量的价格
+}
+
+asset Offer identified by offerId {
+    o String offerId
+    o String name
+
+    o OfferedInfo negative
+    o OfferedInfo positive
+
+    --> Bidder bidder optional
+    --> Demand demand optional
+}
+
+concept TestResult6 {                       //德国配电系统运营商对测试结果的公布，对每个技术单位输入通过或者失败
+    o TestResult[] from00To04
+    o TestResult[] from04To08
+    o TestResult[] from08To12
+    o TestResult[] from12To16
+    o TestResult[] from16To20
+    o TestResult[] from20To24
+}
+
+
+concept WinnerInfo {                    //中标者的信息
+    --> Offer offer
+    o Double allocatedCapacity           //中标者被分配到的电量，有可能分配到的量小于他竞标时候的所报的电量
+}
+
+concept SortedOffer6 {                   //对参与竞标的人按照capacityPrice排序，从小到大排
+    o WinnerInfo[] from00To04
+    o WinnerInfo[] from04To08
+    o WinnerInfo[] from08To12
+    o WinnerInfo[] from12To16
+    o WinnerInfo[] from16To20
+    o WinnerInfo[] from20To24
+}
+
+asset SelectedList identified by demandId {     //根据capacityPrice排序的列表，按照需求量做选择。SelectedList表示中标者的清单。
+    o String demandId
+    o SortedOffer6 negative
+    o SortedOffer6 positive
+}
+
+asset PreparatoryList identified by demandId {     //因为capacityPrice 低的人energyPrice不一定低，所以对SelectedList根据energyPrice再排序。
+    o String demandId
+    o SortedOffer6 negative          //这里需要区分正负电量，如果是正电量，按照energyPrice从小到大排列，如果是负电量，按照energyPrice从大到小排列
+    o SortedOffer6 positive
+}
+
+concept DistributionSlot {                     //Aggregator将它的中标量分配给他的技术单位
+    --> TechnicalUnit technicalUnit
+    o Double allocatedCapacity optional         //分配给技术单位的电量
+    o TestResult testResult optional            //德国配电系统运营商公布的测试结果
+}
+
+concept DistributionInfo6 {
+    o DistributionSlot[] from00To04
+    o DistributionSlot[] from04To08
+    o DistributionSlot[] from08To12
+    o DistributionSlot[] from12To16
+    o DistributionSlot[] from16To20
+    o DistributionSlot[] from20To24
+}
+
+asset Distribution identified by distributionId {
+    o String distributionId
+    --> Offer offer
+    o DistributionInfo6 negative
+    o DistributionInfo6 positive
+}
+
+concept TUWinnerInfo {                    //TU被分配的电量 (新增)
+    --> TechnicalUnit technicalUnit
+    o Double allocatedCapacity
+}
+
+concept TUSortedOffer6 {                   //对参与竞标的人按照capacityPrice排序，从小到大排(新增)
+    o TUWinnerInfo[] from00To04
+    o TUWinnerInfo[] from04To08
+    o TUWinnerInfo[] from08To12
+    o TUWinnerInfo[] from12To16
+    o TUWinnerInfo[] from16To20
+    o TUWinnerInfo[] from20To24
+}
+
+asset PoolDistribution identified by demandId {   //第一次分配排序后的结果(新增)
+    o String demandId
+    o TUSortedOffer6 negative
+    o TUSortedOffer6 positive
+}
+
+asset PoolPreparatory identified by demandId {    //第二次分配排序后的结果(新增)
+   o String demandId
+   o DistributionInfo6 negative
+   o DistributionInfo6 positive
+}
+
+asset PowerFlowCalculation identified by powerFlowCalculationId {//用来记录德国配电系统运营商对技术单位做过检验的记录，具体结果写入Distribution
+    o String powerFlowCalculationId
+    --> PoolPreparatory poolPreparatory
+    --> DistributionNetworkOperator distributionNetworkOperator optional
+}
+
+asset OfferInputValue identified by offerInputValueID{   //Offer输入值(新增)
+	o String offerInputValueID
+	o Amount16Arr setValue
+    o Amount16Arr actualValue
+    o Amount16Arr upperLimit optional
+    o Amount16Arr lowerLimit optional
+    o Amount16Arr underFulfillment optional
+    0 Double summaryOfUnderFulfillment optional
+    o Double summaryOfSetValue optional
+    o Double summaryOfActualValue  optional
+}
+
+
+asset TUInputValue identified by tuInputValueID{   //tu输入值(新增)
+	o String tuInputValueID
+	o Amount16Arr setValue
+    o Amount16Arr actualValue
+    o Amount16Arr upperLimit optional
+    o Amount16Arr lowerLimit optional
+    o Amount16Arr underFulfillment optional
+    o Amount16Arr acceptanceValue optional
+    o Amount16Arr allocableAcceptanceValue optional
+    o Amount16Arr acceptanceValueTU optional
+    o Amount16Arr underFulfillmentTU optional
+    o Double[] proportion optional
+    0 Double summaryOfUnderFulfillment optional
+    o Double summaryOfSetValue optional
+    o Double summaryOfActualValue  optional
+}
+
+
+
+
+asset Activation identified by activationID {          //德国电网运营商公布的调用中标者电量结果，这部分是需要修改的
+    o String activationID
+    --> Offer offer
+    o ProductType productType
+    o ProductTimeSlice timeSlice
+    o Amount16 deployedControlEnergy optional
+    o Double deployedControlEnergyTotal optional
+    --> TransmissionSystemOperator transmissionSystemOperator optional
+}
+
+
+asset ToleranceInfo identified by toleranceID {     //德国电网运营商对中标者结算(新增)
+     o String toleranceID
+     o Double[] upperLimit
+     o Double[] lowerLimit
+     o Double[] underFulfillment
+	 o Double summaryOfUnderFulfillment optional
+}
+
+
+concept RemunerationInfo {                     //德国电网运营商对中标者结算
+    o EnergyPricePaymentDirection energyPricePaymentDirection       //支付的方向，谁给谁钱
+    o Double remunerationProcuredControlEnergy                //保留电量的盈利，即文档中的盈利L
+    o Double remunerationDeployedControlEnergy                //调用电量的盈利，即文档中的盈利A
+    o Double remuneration
+}
+
+asset Remuneration identified by remunerationId {           //德国电网运营商公布的结算结果，这部分是需要修改的
+    o String remunerationId
+    --> Activation activation
+    o RemunerationInfo remunerationInfo optional
+    --> TransmissionSystemOperator transmissionSystemOperator optional
+}
+
+
+asset Deployment identified by deploymentId {            //Aggregator公布调用技术单位TU电量的结果，这部分是需要修改的
+    o String deploymentId
+    --> PoolPreparatory poolPreparatory
+    --> TechnicalUnit technicalUnit
+    o ProductType productType
+    o ProductTimeSlice timeSlice
+    o Amount16 deployedControlEnergy optional
+    o Double deployedControlEnergyTotal optional
+    --> TransmissionSystemOperator transmissionSystemOperator optional
+}
+
+
+asset Accounting identified by accountingId {            //Aggregator公布技术单位TU的结算结果，这部分是需要修改的
+    o String accountingId
+    --> Deployment deployment
+    o RemunerationInfo remunerationInfo optional
+    --> TransmissionSystemOperator transmissionSystemOperator optional
+}
+
+
+
+transaction AddTechnicalUnitToBidder {                 // 将技术单位加到相应的Aggregator属性中
+    --> Bidder bidder
+    --> TechnicalUnit technicalUnit
+}
+
+transaction AddDemand {                          //公布竞标信息
+    o Demand demand
+}
+
+transaction MakeOffer {                          //开始竞标
+    --> Bidder bidder
+    o Offer offer
+    --> Demand demand
+}
+
+transaction populateTestData1 {
+}
+transaction populateTestData2 {
+}
+
+transaction StopTender {                          //停止竞标
+    --> Demand demand
+}
+
+transaction PreparatoryDeploy {                  //准备调用列表，即按照energyprice重新排序
+    --> Demand demand
+}
+
+
+transaction DistributeProcuredSCR  {                //Aggregator分配它的中标量
+    o Distribution distribution
+}
+
+transaction TestPowerFlowCalculation {              //德国配电系统运营商公布技术单位的测试结果
+    --> DistributionNetworkOperator distributionNetworkOperator optional
+    o PowerFlowCalculation powerFlowCalculation
+    o TestResult6 negative
+    o TestResult6 positive
+}
+
+transaction ActivateSCR {                         //德国电网运营商公布的调用中标者电量结果
+    --> TransmissionSystemOperator transmissionSystemOperator
+    o Activation activation
+    o String timeInterval    //时间区间如:2019_0702
+}
+
+transaction MakeRemuneration {                   //德国电网运营商公布结算结果
+    --> TransmissionSystemOperator transmissionSystemOperator
+    o Remuneration remuneration
+    --> OfferInputValue offer_data
+}
+
+transaction DeployTechnicalUnits {                 //Aggregator公布调用技术单位TU电量
+    --> TransmissionSystemOperator transmissionSystemOperator optional
+    o Deployment deployment
+    o String timeInterval
+}
+
+transaction AccountForTechnicalUnits {            //Aggregator公布技术单位TU的结算结果
+    --> TransmissionSystemOperator transmissionSystemOperator
+    o Accounting remuneration,
+    --> TUInputValue tu_data
+}
+
+
+event TenderStartedEvent {                         //事件的订阅
+    --> Demand demand
+}
+
+event TenderStoppedEvent {
+    --> Demand demand
+}
+
+event AnnounceTenderResultsEvent {
+    --> Demand demand
+}
+
+event DistributionCompletedEvent {
+    --> Distribution distribution
+}
+
+event TestCompletedEvent {
+    --> PoolPreparatory poolPreparatory
+    o TestResult testResult
+}
+
+event CallCompletedEvent {
+    o String message
+}
