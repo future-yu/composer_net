@@ -346,11 +346,6 @@ async function distributeProcuredSCR(tx) {
     let factory = getFactory();
     let distribution = factory.newResource(NS, 'Distribution', distributionParam.distributionId);
 
-    distribution.offer = distributionParam.offer;
-    let poolDistribution = factory.newResource(NS, 'PoolDistribution', distribution.offer.demand.demandId);
-    let poolPreparatory = factory.newResource(NS, 'PoolPreparatory', distribution.offer.demand.demandId);
-
-
     if (distribution.offer.bidder.type != BidderType.AGGREGATOR) {
         throw new Error("Bidder is not an Aggregator");
     }
@@ -359,211 +354,182 @@ async function distributeProcuredSCR(tx) {
     let preparatoryList = await preparatoryListRegistry.get(distribution.offer.demand.demandId);
 
     let negative = factory.newConcept(NS, 'DistributionInfo6');
-    let poolNegative = factory.newConcept(NS, 'TUSortedOffer6');
-    let negativePreparatory = factory.newConcept(NS, 'DistributionInfo6');
-
-
-    for (let prop of ONE_DAY_SLICES_6) {
-        // 去除不附属的provider
-        negativeParam[prop] = negativeParam[prop].filter(slot => distribution.offer.bidder.technicalUnits.findIndex(p => slot.technicalUnit.technicalUnitId == p.technicalUnitId) != -1);
-        // 把 provider 按照 capacityPrice 从低到高排序
-        negativeParam[prop].sort((slot1, slot2) => slot1.technicalUnit.capacityPrice - slot2.technicalUnit.capacityPrice);
-
-        negative[prop] = [];
-        poolNegative[prop] = [];
-        negativePreparatory[prop] = [];
-        let sum = 0;
-        let winnerInfo = preparatoryList.negative[prop].find(info => info.offer.getIdentifier() == distribution.offer.offerId);
-        let total = winnerInfo.allocatedCapacity / 100 * 110;
-
-        //按照capacityPrice进行第一次排序
-        for (let [i, ds] of negativeParam[prop].entries()) {  //遍历每一个technicalUnit
-            if (sum >= total) {
-                break;
-            }
-
-            let allocatedCapacity = ds.technicalUnit.offeredCapacity;  //竞拍的电量
-
-
-            if (allocatedCapacity > total - sum) {
-                allocatedCapacity = (total * 100 - sum * 100) / 100;
-            }
-            sum += allocatedCapacity;
-
-            let slot = factory.newConcept(NS, 'DistributionSlot');
-            let poolSlot = factory.newConcept(NS, 'TUWinnerInfo');
-
-            poolSlot.technicalUnit = ds.technicalUnit;
-            poolSlot.allocatedCapacity = allocatedCapacity;
-
-            slot.technicalUnit = ds.technicalUnit;
-            slot.allocatedCapacity = allocatedCapacity;
-            negative[prop].push(slot);
-            poolNegative[prop].push(poolSlot);
-        }
-
-        //按照energyPrice进行第二次排序
-        let disSum = 0;
-        let disTotal = winnerInfo.allocatedCapacity / 100 * 110;
-        negative[prop].sort((slot1, slot2) => slot2.technicalUnit.energyPrice - slot1.technicalUnit.energyPrice);
-
-        for (let [i, ds] of negative[prop].entries()) {  //遍历每一个technicalUnit
-            if (disSum >= disTotal) {
-                break;
-            }
-
-            let allocatedCapacity = ds.technicalUnit.offeredCapacity;  //竞拍的电量
-            if (allocatedCapacity > disTotal - disSum) {
-                allocatedCapacity = (disTotal * 100 - disSum * 100) / 100;
-            }
-            disSum += allocatedCapacity;
-
-            let slot = factory.newConcept(NS, 'DistributionSlot');
-
-            slot.technicalUnit = ds.technicalUnit;
-            slot.allocatedCapacity = allocatedCapacity;
-            negativePreparatory[prop].push(slot);
-
-        }
-    }
-
-    distribution.negative = negativePreparatory;
-    poolDistribution.negative = poolNegative;
-
-
     let positive = factory.newConcept(NS, 'DistributionInfo6');
-    let positivePreparatory = factory.newConcept(NS, 'DistributionInfo6');
-    let poolPositive = factory.newConcept(NS, 'TUSortedOffer6');
 
-    // 按照offeredCapacity参数进行删选
+    //计算Distribution
     for (let prop of ONE_DAY_SLICES_6) {
         // 去除不附属的provider
         positiveParam[prop] = positiveParam[prop].filter(slot => distribution.offer.bidder.technicalUnits.findIndex(p => slot.technicalUnit.technicalUnitId == p.technicalUnitId) != -1);
+        negativeParam[prop] = negativeParam[prop].filter(slot => distribution.offer.bidder.technicalUnits.findIndex(p => slot.technicalUnit.technicalUnitId == p.technicalUnitId) != -1);
+
         // 把 provider 按照 capacityPrice 从低到高排序
         positiveParam[prop].sort((slot1, slot2) => slot1.technicalUnit.capacityPrice - slot2.technicalUnit.capacityPrice);
+        negativeParam[prop].sort((slot1, slot2) => slot1.technicalUnit.capacityPrice - slot2.technicalUnit.capacityPrice);
 
+        negative[prop] = [];
         positive[prop] = [];
-        positivePreparatory[prop] = [];
-        poolPositive[prop] = [];
-
-        let sum = 0;
-        let winnerInfo = preparatoryList.positive[prop].find(info => info.offer.getIdentifier() == distribution.offer.offerId);
+        let winnerInfo = preparatoryList.negative[prop].find(info => info.offer.getIdentifier() == distribution.offer.offerId);
         let total = winnerInfo.allocatedCapacity / 100 * 110;
+        let sumPS = 0;
+        let sumNG = 0;
+
         //按照capacityPrice进行第一次排序
-        for (let [i, ds] of positiveParam[prop].entries()) {  //遍历每一个technicalUnit
-            if (sum >= total) {
+        for (let [i, ds] of negativeParam[prop].entries()) {  //遍历每一个technicalUnit
+            if (sumNG >= total) {
                 break;
             }
 
             let allocatedCapacity = ds.technicalUnit.offeredCapacity;  //竞拍的电量
-            if (allocatedCapacity > total - sum) {
-                allocatedCapacity = (total * 100 - sum * 100) / 100;
+            if (allocatedCapacity > total - sumNG) {
+                allocatedCapacity = (total * 100 - sumNG * 100) / 100;
             }
-            sum += allocatedCapacity;
-
+            sumNG += allocatedCapacity;
             let slot = factory.newConcept(NS, 'DistributionSlot');
-            let poolSlot = factory.newConcept(NS, 'TUWinnerInfo');
+            slot.technicalUnit = ds.technicalUnit;
+            slot.allocatedCapacity = allocatedCapacity;
+            negative[prop].push(slot);
 
-            poolSlot.technicalUnit = ds.technicalUnit;
-            poolSlot.allocatedCapacity = allocatedCapacity;
+        }
 
+        for (let [i, ds] of positiveParam[prop].entries()) {  //遍历每一个technicalUnit
+            if (sumPS >= total) {
+                break;
+            }
+            let allocatedCapacity = ds.technicalUnit.offeredCapacity;  //竞拍的电量
+            if (allocatedCapacity > total - sumPS) {
+                allocatedCapacity = (total * 100 - sumPS * 100) / 100;
+            }
+            sumPS += allocatedCapacity;
+            let slot = factory.newConcept(NS, 'DistributionSlot');
             slot.technicalUnit = ds.technicalUnit;
             slot.allocatedCapacity = allocatedCapacity;
             positive[prop].push(slot);
-            poolPositive[prop].push(poolSlot);
         }
 
-        //按照energyPrice进行第二次排序
-        let disSum = 0;
-        let disTotal = winnerInfo.allocatedCapacity / 100 * 110;
-        positive[prop].sort((slot1, slot2) => slot1.technicalUnit.energyPrice - slot2.technicalUnit.energyPrice);
-        for (let [i, ds] of positive[prop].entries()) {  //遍历每一个technicalUnit
-            if (disSum >= disTotal) {
-                break;
-            }
-
-            let allocatedCapacity = ds.technicalUnit.offeredCapacity;  //竞拍的电量
-            if (allocatedCapacity > disTotal - disSum) {
-                allocatedCapacity = (disTotal * 100 - disSum * 100) / 100;
-            }
-            disSum += allocatedCapacity;
-
-            let slot = factory.newConcept(NS, 'DistributionSlot');
-            slot.technicalUnit = ds.technicalUnit;
-            slot.allocatedCapacity = allocatedCapacity;
-            positivePreparatory[prop].push(slot);
-        }
     }
+    distribution.offer = distributionParam.offer;
+    distribution.negative = negative;
+    distribution.positive = positive;
 
-    distribution.positive = positivePreparatory;
-    poolDistribution.positive = poolPositive;
-
-    //计算poolPrep
-    let poolPreNegative = factory.newConcept(NS, 'DistributionInfo6');
-    let poolPrePositive = factory.newConcept(NS, 'DistributionInfo6');
-
-    for (let prop of ONE_DAY_SLICES_6) {
-        let poolSum = 0;
-        let winnerInfoPos = preparatoryList.positive[prop].find(info => info.offer.getIdentifier() == distribution.offer.offerId);
-        let winnerInfoNeg = preparatoryList.negative[prop].find(info => info.offer.getIdentifier() == distribution.offer.offerId);
-
-        let poolTotalPos = winnerInfoPos.allocatedCapacity;
-        let poolTotalNeg = winnerInfoNeg.allocatedCapacity;
-
-        poolPreNegative[prop] = [];
-        poolPrePositive[prop] = [];
-
-        for (let [i, ds] of negativePreparatory[prop].entries()) {  //遍历每一个technicalUnit
-            if (poolSum >= poolTotalNeg) {
-                break;
-            }
-
-            let allocatedCapacity = ds.technicalUnit.offeredCapacity;  //竞拍的电量
-            if (allocatedCapacity > poolTotalNeg - poolSum) {
-                allocatedCapacity = (poolTotalNeg * 100 - poolSum * 100) / 100;
-            }
-            poolSum += allocatedCapacity;
-
-            let slot = factory.newConcept(NS, 'DistributionSlot');
-            slot.technicalUnit = ds.technicalUnit;
-            slot.allocatedCapacity = allocatedCapacity;
-            poolPreNegative[prop].push(slot);
-        }
-        poolSum = 0;
-        for (let [i, ds] of positivePreparatory[prop].entries()) {  //遍历每一个technicalUnit
-            if (poolSum >= poolTotalPos) {
-                break;
-            }
-
-            let allocatedCapacity = ds.technicalUnit.offeredCapacity;  //竞拍的电量
-            if (allocatedCapacity > poolTotalPos - poolSum) {
-                allocatedCapacity = (poolTotalPos * 100 - poolSum * 100) / 100;
-            }
-            poolSum += allocatedCapacity;
-
-            let slot = factory.newConcept(NS, 'DistributionSlot');
-            slot.technicalUnit = ds.technicalUnit;
-            slot.allocatedCapacity = allocatedCapacity;
-            poolPrePositive[prop].push(slot);
-        }
-    }
-    poolPreparatory.negative = poolPreNegative
-    poolPreparatory.positive = poolPrePositive
-
-    console.log("update registry: distribution");
+    console.log(`add Distribution ${distributionParam.distributionId}`)
     let distributionRegistry = await getAssetRegistry(`${NS}.Distribution`);
-    let poolDistributionRegistry = await getAssetRegistry(`${NS}.PoolDistribution`)
-    let poolPreparatoryRegistry = await getAssetRegistry(`${NS}.PoolPreparatory`)
-
     await distributionRegistry.add(distribution);
-    await poolDistributionRegistry.add(poolDistribution);
-    await poolPreparatoryRegistry.add(poolPreparatory);
-
     // 完成分配电量事件
     console.log("emit DistributionCompletedEvent");
     let distributionCompletedEvent = factory.newEvent(NS, 'DistributionCompletedEvent');
     distributionCompletedEvent.distribution = factory.newRelationship(NS, 'Distribution', distributionParam.distributionId);
     emit(distributionCompletedEvent);
+
+
+    //-------------------------------------------------------
+
+    //计算PoolDistribution
+    let poolDistribution = factory.newResource(NS, 'PoolDistribution', distribution.offer.demand.demandId);
+    let poolPSumPS=0;
+    let poolNGumNG=0;
+    let poolPSArr = factory.newConcept(NS, 'TUSortedOffer6');
+    let poolNGArr = factory.newConcept(NS, 'TUSortedOffer6');
+
+
+    for (let prop of ONE_DAY_SLICES_6) {
+        //从小到大排
+        positive[prop].sort((slot1, slot2) => slot1.technicalUnit.energyPrice - slot2.technicalUnit.energyPrice);
+        //从大到小排
+        negative[prop].sort((slot1, slot2) => slot2.technicalUnit.energyPrice - slot1.technicalUnit.energyPrice);
+
+        let winnerInfo = preparatoryList.negative[prop].find(info => info.offer.getIdentifier() == distribution.offer.offerId);
+        let total = winnerInfo.allocatedCapacity / 100 * 110;
+
+        poolPSArr[prop]=[]
+        poolNGArr[prop]=[]
+
+        for (let [i, ds] of positive[prop].entries()) {  //遍历每一个technicalUnit
+            if (poolPSumPS >= total) {
+                break;
+            }
+            let allocatedCapacity = ds.technicalUnit.offeredCapacity;  //竞拍的电量
+            if (allocatedCapacity > total - poolPSumPS) {
+                allocatedCapacity = (total * 100 - poolPSumPS * 100) / 100;
+            }
+            poolPSumPS += allocatedCapacity;
+            let poolSlot = factory.newConcept(NS, 'TUWinnerInfo');
+            poolSlot.technicalUnit = ds.technicalUnit;
+            poolSlot.allocatedCapacity = allocatedCapacity;
+            poolPSArr[prop].push(poolSlot);
+        }
+
+        for (let [i, ds] of negative[prop].entries()) {  //遍历每一个technicalUnit
+            if (poolNGumNG >= total) {
+                break;
+            }
+            let allocatedCapacity = ds.technicalUnit.offeredCapacity;  //竞拍的电量
+            if (allocatedCapacity > total - poolNGumNG) {
+                allocatedCapacity = (total * 100 - poolNGumNG * 100) / 100;
+            }
+            poolNGumNG += allocatedCapacity;
+            let poolSlot = factory.newConcept(NS, 'TUWinnerInfo');
+            poolSlot.technicalUnit = ds.technicalUnit;
+            poolSlot.allocatedCapacity = allocatedCapacity;
+            poolNGArr[prop].push(poolSlot);
+        }
+    }
+
+    poolDistribution.positive = poolPSArr;
+    poolDistribution.negative = poolNGArr;
+    let poolDistributionRegistry = await getAssetRegistry(`${NS}.PoolDistribution`);
+    await poolDistributionRegistry.add(poolDistribution);
+
+
+    //-------------------------------------------------------
+    //计算PoolPrep
+    let poolPreparatory = factory.newResource(NS, 'PoolPreparatory', distribution.offer.demand.demandId);
+    let poolPrePSumPS=0;
+    let poolPrePSumNG=0;
+    let poolPrePSArr = factory.newConcept(NS, 'TUSortedOffer6');
+    let poolPreNGArr = factory.newConcept(NS, 'TUSortedOffer6');
+
+
+    for (let prop of ONE_DAY_SLICES_6) {
+        let winnerInfo = preparatoryList.negative[prop].find(info => info.offer.getIdentifier() == distribution.offer.offerId);
+        let total = winnerInfo.allocatedCapacity;
+
+        poolPrePSArr[prop]=[]
+        poolPreNGArr[prop]=[]
+
+        for (let [i, ds] of poolPSArr[prop].entries()) {  //遍历每一个technicalUnit
+            if (poolPrePSumPS >= total) {
+                break;
+            }
+            let allocatedCapacity = ds.technicalUnit.offeredCapacity;  //竞拍的电量
+            if (allocatedCapacity > total - poolPrePSumPS) {
+                allocatedCapacity = (total * 100 - poolPrePSumPS * 100) / 100;
+            }
+            poolPrePSumPS += allocatedCapacity;
+            let poolSlot = factory.newConcept(NS, 'TUWinnerInfo');
+            poolSlot.technicalUnit = ds.technicalUnit;
+            poolSlot.allocatedCapacity = allocatedCapacity;
+            poolPrePSArr[prop].push(poolSlot);
+        }
+
+        for (let [i, ds] of poolNGArr[prop].entries()) {  //遍历每一个technicalUnit
+            if (poolPrePSumNG >= total) {
+                break;
+            }
+            let allocatedCapacity = ds.technicalUnit.offeredCapacity;  //竞拍的电量
+            if (allocatedCapacity > total - poolPrePSumNG) {
+                allocatedCapacity = (total * 100 - poolPrePSumNG * 100) / 100;
+            }
+            poolPrePSumNG += allocatedCapacity;
+            let poolSlot = factory.newConcept(NS, 'TUWinnerInfo');
+            poolSlot.technicalUnit = ds.technicalUnit;
+            poolSlot.allocatedCapacity = allocatedCapacity;
+            poolPreNGArr[prop].push(poolSlot);
+        }
+    }
+    poolPreparatory.positive = poolPrePSArr;
+    poolPreparatory.negative = poolPreNGArr;
+    let poolPreparatoryRegistry = await getAssetRegistry(`${NS}.PoolPreparatory`)
+    await poolPreparatoryRegistry.add(poolPreparatory);
 }
 
 
@@ -908,7 +874,7 @@ async function accountForTechnicalUnits(tx) {
     let remunerationInfo = factory.newConcept(NS, 'RemunerationInfo');
 
     if (productType == ProductType.POSITIVE) {
-        let slot = remuneration.deployment.distribution.positive[timeSlice].find(slot => slot.technicalUnit.getIdentifier() == remuneration.deployment.technicalUnit.getIdentifier());
+        let slot = remuneration.deployment.poolPreparatory.positive[timeSlice].find(slot => slot.technicalUnit.getIdentifier() == remuneration.deployment.technicalUnit.getIdentifier());
 
         remunerationInfo.remunerationProcuredControlEnergy = 4 * slot.allocatedCapacity * slot.technicalUnit.capacityPrice;
 
@@ -927,7 +893,7 @@ async function accountForTechnicalUnits(tx) {
         remunerationInfo.remuneration = remunerationInfo.remunerationProcuredControlEnergy + remunerationInfo.remunerationDeployedControlEnergy;
         remunerationInfo.energyPricePaymentDirection = EnergyPricePaymentDirection.GRID_TO_TECHNICAL_UNIT;
     } else if (productType == ProductType.NEGATIVE) {
-        let slot = remuneration.deployment.distribution.negative[timeSlice].find(slot => slot.technicalUnit.getIdentifier() == remuneration.deployment.technicalUnit.getIdentifier());
+        let slot = remuneration.deployment.poolPreparatory.negative[timeSlice].find(slot => slot.technicalUnit.getIdentifier() == remuneration.deployment.technicalUnit.getIdentifier());
 
         remunerationInfo.remunerationProcuredControlEnergy = 4 * slot.allocatedCapacity * slot.technicalUnit.capacityPrice;
         //计算remunerationDeployedControlEnergy

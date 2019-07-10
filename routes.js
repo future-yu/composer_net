@@ -28,9 +28,13 @@ function getData(data_path) {
     let fileNameArr = fs.readdirSync(data_path);
     fileNameArr.forEach((item)=>{
         let data_name = item.split('.')[0];
-        data[file_name[data_name]]=fs.readFileSync(path.join(data_path,item)).toString().trim().split(',').map((item)=>{
-            return parseFloat(item)
-        });
+        try {
+            data[file_name[data_name]]=fs.readFileSync(path.join(data_path,item)).toString().trim().split(',').map((item)=>{
+                return parseFloat(item)
+            });
+        }catch (e) {
+            throw e
+        }
     });
     return data;
 }

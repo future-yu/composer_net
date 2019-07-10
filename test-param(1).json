@@ -1,0 +1,326 @@
+// ■ 【 测试 AddTechnicalUnitToBidder 】
+{
+  "$class": "org.control.reserve.platform.AddTechnicalUnitToBidder",
+  "bidder": "resource:org.control.reserve.platform.Bidder#Bidder_002",
+  "technicalUnit": "resource:org.control.reserve.platform.TechnicalUnit#TechnicalUnit_002"
+}
+
+// ■ 【 测试 AddDemand 】
+{
+  "$class": "org.control.reserve.platform.AddDemand",
+  "demand": {
+    "$class": "org.control.reserve.platform.Demand",
+    "demandId": "3333",
+    "reserveType": "",
+    "tenderType": "",
+    "tenderDeadline": "2019-04-10T13:23:01.509Z",
+    "deliveryPeriod": "2019-04-11T13:23:01.509Z",
+    "negative": {
+      "$class": "org.control.reserve.platform.Amount6",
+      "from00To04": 20,
+      "from04To08": 30,
+      "from08To12": 40,
+      "from12To16": 30,
+      "from16To20": 20,
+      "from20To24": 10
+    },
+    "positive": {
+      "$class": "org.control.reserve.platform.Amount6",
+      "from00To04": 90,
+      "from04To08": 80,
+      "from08To12": 70,
+      "from12To16": 60,
+      "from16To20": 50,
+      "from20To24": 40
+    }
+  }
+}
+
+// ■ 【 测试 MakeOffer 】
+{
+  "$class": "org.control.reserve.platform.MakeOffer",
+  "bidder": "resource:org.control.reserve.platform.Bidder#Bidder_010",
+  "offer": {
+    "$class": "org.control.reserve.platform.Offer",
+    "offerId": "3333-1",
+    "name": "",
+    "negative": {
+      "$class": "org.control.reserve.platform.OfferedInfo",
+      "offeredCapacity": {
+        "$class": "org.control.reserve.platform.Amount6",
+        "from00To04": 11,
+        "from04To08": 12,
+        "from08To12": 13,
+        "from12To16": 14,
+        "from16To20": 15,
+        "from20To24": 16
+      },
+      "capacityPrice": {
+        "$class": "org.control.reserve.platform.Amount6",
+        "from00To04": 21,
+        "from04To08": 22,
+        "from08To12": 23,
+        "from12To16": 24,
+        "from16To20": 25,
+        "from20To24": 26
+      },
+      "energyPrice": {
+        "$class": "org.control.reserve.platform.Amount6",
+        "from00To04": 31,
+        "from04To08": 32,
+        "from08To12": 33,
+        "from12To16": 34,
+        "from16To20": 35,
+        "from20To24": 36
+      }
+    },
+    "positive": {
+      "$class": "org.control.reserve.platform.OfferedInfo",
+      "offeredCapacity": {
+        "$class": "org.control.reserve.platform.Amount6",
+        "from00To04": 11,
+        "from04To08": 12,
+        "from08To12": 13,
+        "from12To16": 14,
+        "from16To20": 15,
+        "from20To24": 16
+      },
+      "capacityPrice": {
+        "$class": "org.control.reserve.platform.Amount6",
+        "from00To04": 21,
+        "from04To08": 22,
+        "from08To12": 23,
+        "from12To16": 24,
+        "from16To20": 25,
+        "from20To24": 26
+      },
+      "energyPrice": {
+        "$class": "org.control.reserve.platform.Amount6",
+        "from00To04": 31,
+        "from04To08": 32,
+        "from08To12": 33,
+        "from12To16": 34,
+        "from16To20": 35,
+        "from20To24": 36
+      }
+    }
+  },
+  "demand": "resource:org.control.reserve.platform.Demand#3333"
+}
+
+// ■ 【 测试 StopTender 】
+{
+  "$class": "org.control.reserve.platform.StopTender",
+  "demand": "resource:org.control.reserve.platform.Demand#Demand_01042019"
+}
+
+// ■ 【 测试 PreparatoryDeploy 】
+{
+  "$class": "org.control.reserve.platform.PreparatoryDeploy",
+  "demand": "resource:org.control.reserve.platform.Demand#Demand_01042019"
+}
+
+// ■ 【 测试 DistributeProcuredSCR 】
+{
+  "$class": "org.control.reserve.platform.DistributeProcuredSCR",
+  "distribution": {
+    "$class": "org.control.reserve.platform.Distribution",
+    "distributionId": "0001",
+    "offer": "resource:org.control.reserve.platform.Offer#Offer_01",
+    "negative": {
+      "$class": "org.control.reserve.platform.DistributionInfo6",
+      "from00To04": [ {
+          "technicalUnit": "resource:org.control.reserve.platform.TechnicalUnit#TechnicalUnit_001"
+        }, {
+          "technicalUnit": "resource:org.control.reserve.platform.TechnicalUnit#TechnicalUnit_002"
+        }, {
+          "technicalUnit": "resource:org.control.reserve.platform.TechnicalUnit#TechnicalUnit_003"
+        }, {
+          "technicalUnit": "resource:org.control.reserve.platform.TechnicalUnit#TechnicalUnit_004"
+        } , {
+        "technicalUnit": "resource:org.control.reserve.platform.TechnicalUnit#TechnicalUnit_005"
+        } ],
+      "from04To08": [ {
+          "technicalUnit": "resource:org.control.reserve.platform.TechnicalUnit#TechnicalUnit_001"
+        }, {
+          "technicalUnit": "resource:org.control.reserve.platform.TechnicalUnit#TechnicalUnit_002"
+        }, {
+          "technicalUnit": "resource:org.control.reserve.platform.TechnicalUnit#TechnicalUnit_003"
+        }, {
+          "technicalUnit": "resource:org.control.reserve.platform.TechnicalUnit#TechnicalUnit_004"
+        } , {
+        "technicalUnit": "resource:org.control.reserve.platform.TechnicalUnit#TechnicalUnit_005"
+      } ],
+      "from08To12": [ {
+          "technicalUnit": "resource:org.control.reserve.platform.TechnicalUnit#TechnicalUnit_001"
+        }, {
+          "technicalUnit": "resource:org.control.reserve.platform.TechnicalUnit#TechnicalUnit_002"
+        }, {
+          "technicalUnit": "resource:org.control.reserve.platform.TechnicalUnit#TechnicalUnit_003"
+        }, {
+          "technicalUnit": "resource:org.control.reserve.platform.TechnicalUnit#TechnicalUnit_004"
+      } , {
+        "technicalUnit": "resource:org.control.reserve.platform.TechnicalUnit#TechnicalUnit_005"
+      } ],
+      "from12To16": [ {
+          "technicalUnit": "resource:org.control.reserve.platform.TechnicalUnit#TechnicalUnit_001"
+        }, {
+          "technicalUnit": "resource:org.control.reserve.platform.TechnicalUnit#TechnicalUnit_002"
+        }, {
+          "technicalUnit": "resource:org.control.reserve.platform.TechnicalUnit#TechnicalUnit_003"
+        }, {
+          "technicalUnit": "resource:org.control.reserve.platform.TechnicalUnit#TechnicalUnit_004"
+      } , {
+        "technicalUnit": "resource:org.control.reserve.platform.TechnicalUnit#TechnicalUnit_005"
+      } ],
+      "from16To20": [ {
+          "technicalUnit": "resource:org.control.reserve.platform.TechnicalUnit#TechnicalUnit_001"
+        }, {
+          "technicalUnit": "resource:org.control.reserve.platform.TechnicalUnit#TechnicalUnit_002"
+        }, {
+          "technicalUnit": "resource:org.control.reserve.platform.TechnicalUnit#TechnicalUnit_003"
+        }, {
+          "technicalUnit": "resource:org.control.reserve.platform.TechnicalUnit#TechnicalUnit_004"
+      } , {
+        "technicalUnit": "resource:org.control.reserve.platform.TechnicalUnit#TechnicalUnit_005"
+      } ],
+      "from20To24": [ {
+          "technicalUnit": "resource:org.control.reserve.platform.TechnicalUnit#TechnicalUnit_001"
+        }, {
+          "technicalUnit": "resource:org.control.reserve.platform.TechnicalUnit#TechnicalUnit_002"
+        }, {
+          "technicalUnit": "resource:org.control.reserve.platform.TechnicalUnit#TechnicalUnit_003"
+        }, {
+          "technicalUnit": "resource:org.control.reserve.platform.TechnicalUnit#TechnicalUnit_004"
+      } , {
+        "technicalUnit": "resource:org.control.reserve.platform.TechnicalUnit#TechnicalUnit_005"
+      } ]
+    },
+    "positive": {
+      "$class": "org.control.reserve.platform.DistributionInfo6",
+      "from00To04": [ {
+          "technicalUnit": "resource:org.control.reserve.platform.TechnicalUnit#TechnicalUnit_001"
+        }, {
+          "technicalUnit": "resource:org.control.reserve.platform.TechnicalUnit#TechnicalUnit_002"
+        }, {
+          "technicalUnit": "resource:org.control.reserve.platform.TechnicalUnit#TechnicalUnit_003"
+        }, {
+          "technicalUnit": "resource:org.control.reserve.platform.TechnicalUnit#TechnicalUnit_004"
+        } , {
+        "technicalUnit": "resource:org.control.reserve.platform.TechnicalUnit#TechnicalUnit_005"
+        }],
+      "from04To08": [ {
+          "technicalUnit": "resource:org.control.reserve.platform.TechnicalUnit#TechnicalUnit_001"
+        }, {
+          "technicalUnit": "resource:org.control.reserve.platform.TechnicalUnit#TechnicalUnit_002"
+        }, {
+          "technicalUnit": "resource:org.control.reserve.platform.TechnicalUnit#TechnicalUnit_003"
+        }, {
+          "technicalUnit": "resource:org.control.reserve.platform.TechnicalUnit#TechnicalUnit_004"
+        }, {
+        "technicalUnit": "resource:org.control.reserve.platform.TechnicalUnit#TechnicalUnit_005"
+      } ],
+      "from08To12": [ {
+          "technicalUnit": "resource:org.control.reserve.platform.TechnicalUnit#TechnicalUnit_001"
+        }, {
+          "technicalUnit": "resource:org.control.reserve.platform.TechnicalUnit#TechnicalUnit_002"
+        }, {
+          "technicalUnit": "resource:org.control.reserve.platform.TechnicalUnit#TechnicalUnit_003"
+        }, {
+          "technicalUnit": "resource:org.control.reserve.platform.TechnicalUnit#TechnicalUnit_004"
+      }, {
+        "technicalUnit": "resource:org.control.reserve.platform.TechnicalUnit#TechnicalUnit_005"
+      } ],
+      "from12To16": [ {
+          "technicalUnit": "resource:org.control.reserve.platform.TechnicalUnit#TechnicalUnit_001"
+        }, {
+          "technicalUnit": "resource:org.control.reserve.platform.TechnicalUnit#TechnicalUnit_002"
+        }, {
+          "technicalUnit": "resource:org.control.reserve.platform.TechnicalUnit#TechnicalUnit_003"
+        }, {
+          "technicalUnit": "resource:org.control.reserve.platform.TechnicalUnit#TechnicalUnit_004"
+      }, {
+        "technicalUnit": "resource:org.control.reserve.platform.TechnicalUnit#TechnicalUnit_005"
+      } ],
+      "from16To20": [ {
+          "technicalUnit": "resource:org.control.reserve.platform.TechnicalUnit#TechnicalUnit_001"
+        }, {
+          "technicalUnit": "resource:org.control.reserve.platform.TechnicalUnit#TechnicalUnit_002"
+        }, {
+          "technicalUnit": "resource:org.control.reserve.platform.TechnicalUnit#TechnicalUnit_003"
+        }, {
+          "technicalUnit": "resource:org.control.reserve.platform.TechnicalUnit#TechnicalUnit_004"
+      }, {
+        "technicalUnit": "resource:org.control.reserve.platform.TechnicalUnit#TechnicalUnit_005"
+      } ],
+      "from20To24": [ {
+          "technicalUnit": "resource:org.control.reserve.platform.TechnicalUnit#TechnicalUnit_001"
+        }, {
+          "technicalUnit": "resource:org.control.reserve.platform.TechnicalUnit#TechnicalUnit_002"
+        }, {
+          "technicalUnit": "resource:org.control.reserve.platform.TechnicalUnit#TechnicalUnit_003"
+        }, {
+          "technicalUnit": "resource:org.control.reserve.platform.TechnicalUnit#TechnicalUnit_004"
+      }, {
+        "technicalUnit": "resource:org.control.reserve.platform.TechnicalUnit#TechnicalUnit_005"
+      } ]
+    }
+  }
+}
+
+// ■ 【 测试 TestPowerFlowCalculation 】
+{
+  "$class": "org.control.reserve.platform.TestPowerFlowCalculation",
+  "powerFlowCalculation": {
+    "$class": "org.control.reserve.platform.PowerFlowCalculation",
+    "powerFlowCalculationId": "0001-1",
+    "distribution": "resource:org.control.reserve.platform.Distribution#0001"
+  },
+  "negative": {
+    "$class": "org.control.reserve.platform.TestResult6",
+    "from00To04": ["PASS", "PASS", "PASS"],
+    "from04To08": ["PASS", "PASS", "PASS"],
+    "from08To12": ["PASS", "PASS", "PASS"],
+    "from12To16": ["PASS", "PASS", "PASS"],
+    "from16To20": ["PASS", "PASS", "PASS"],
+    "from20To24": ["PASS", "PASS", "PASS"]
+  },
+  "positive": {
+    "$class": "org.control.reserve.platform.TestResult6",
+    "from00To04": ["PASS", "PASS", "PASS"],
+    "from04To08": ["PASS", "PASS", "PASS"],
+    "from08To12": ["PASS", "PASS", "PASS"],
+    "from12To16": ["PASS", "PASS", "PASS"],
+    "from16To20": ["PASS", "PASS", "PASS"],
+    "from20To24": ["FAIL", "FAIL", "FAIL"]
+  }
+}
+
+{
+  "$class": "org.control.reserve.platform.TestPowerFlowCalculation",
+  "powerFlowCalculation": {
+    "$class": "org.control.reserve.platform.PowerFlowCalculation",
+    "powerFlowCalculationId": "0001-2",
+    "distribution": "resource:org.control.reserve.platform.Distribution#0001"
+  },
+  "negative": {
+    "$class": "org.control.reserve.platform.TestResult6",
+    "from00To04": ["PASS", "PASS", "PASS"],
+    "from04To08": ["PASS", "PASS", "PASS"],
+    "from08To12": ["PASS", "PASS", "PASS"],
+    "from12To16": ["PASS", "PASS", "PASS"],
+    "from16To20": ["PASS", "PASS", "PASS"],
+    "from20To24": ["PASS", "PASS", "PASS"]
+  },
+  "positive": {
+    "$class": "org.control.reserve.platform.TestResult6",
+    "from00To04": ["PASS", "PASS", "PASS"],
+    "from04To08": ["PASS", "PASS", "PASS"],
+    "from08To12": ["PASS", "PASS", "PASS"],
+    "from12To16": ["PASS", "PASS", "PASS"],
+    "from16To20": ["PASS", "PASS", "PASS"],
+    "from20To24": ["PASS", "PASS", "PASS"]
+  }
+}
+
+
